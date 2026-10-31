@@ -36,7 +36,7 @@ jobs:
           assert bot['environment']['MAX_FILE_SIZE'] == '52428800'
           assert bot['environment']['WHITELIST'] == '101'
           assert bot['restart'] == 'unless-stopped'
-          assert bot['mem_limit'] == bot['memswap_limit'] == 805306368
+          assert int(bot['mem_limit']) == int(bot['memswap_limit']) == 805306368
           assert len(bot['tmpfs']) == 2
           print('Reviewed Compose structure and limits: PASS (no containers started).')
           PY
