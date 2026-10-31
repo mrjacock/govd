@@ -18,6 +18,6 @@ func TestRejectedRangesRetryBoundedGETWithoutPartialPrefix(t *testing.T){
  })}
  ctx:=&models.ExtractorContext{Context:context.Background(),HTTPClient:client,FilesTracker:models.NewFilesTracker(),Extractor:&models.Extractor{ID:"fixture"}}
  defer ctx.FilesTracker.Cleanup()
- path,e:=DownloadFile(ctx,[]string{"https://cdn.tiktok.com/fixture.mp4"},"fixture.mp4",&models.DownloadSettings{ChunkSize:3,NumConnections:1,Retries:1})
+ path,e:=downloadFileWithClient(ctx,client,[]string{"https://cdn.tiktok.com/fixture.mp4"},"fixture.mp4",&models.DownloadSettings{ChunkSize:3,NumConnections:1,Retries:1})
  if e!=nil{t.Fatal(e)};content,e:=os.ReadFile(path);if e!=nil||string(content)!="abcdef"||sequential.Load()!=1{t.Fatalf("content=%q sequential=%d err=%v",content,sequential.Load(),e)}
 }

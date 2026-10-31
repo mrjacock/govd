@@ -28,10 +28,12 @@ func DownloadFile(
 	if ctx == nil {
 		return "", fmt.Errorf("nil extractor context")
 	}
+	return downloadFileWithClient(ctx,ctx.HTTPClient.AsDownloadClient(),urlList,fileName,settings)
+}
+
+func downloadFileWithClient(ctx *models.ExtractorContext,client *networking.HTTPClient,urlList []string,fileName string,settings *models.DownloadSettings)(string,error){
 	settings = ensureDownloadSettings(settings)
 	ensureDownloadDir()
-
-	client := ctx.HTTPClient.AsDownloadClient()
 
 	filePath := ToPath(fileName)
 	ctx.FilesTracker.Add(filePath)
