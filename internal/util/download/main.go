@@ -67,8 +67,12 @@ func DownloadFile(
 		} else {
 			err = cd.Download(ctx, writer, settings.NumConnections)
 			if err != nil {
-				lastErr = err
-				continue
+				if errors.Is(err,util.ErrFileTooLarge)||errors.Is(err,networking.ErrUnsafeDestination)||ctx.Context.Err()!=nil{return "",err}
+				// Some public CDNs advertise ranges but reject ranged GETs. Retry
+				// once as a bounded ordinary GET, replacing any partial output.
+				if e:=file.Truncate(0);e!=nil{return "",e}
+				if _,e:=file.Seek(0,io.SeekStart);e!=nil{return "",e}
+				if e:=downloadSequential(ctx,client,url,limitedWriter(file),settings);e!=nil{lastErr=e;continue}
 			}
 		}
 

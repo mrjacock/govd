@@ -89,7 +89,7 @@ func parsePublicVideo(ctx *models.ExtractorContext, info *publicVideo) (*models.
 	if math.IsNaN(info.Duration) || math.IsInf(info.Duration, 0) || info.Duration < 0 || info.FileSize < 0 {
 		return nil, util.ErrUnavailable
 	}
-	if _, e := strconv.ParseUint(ctx.ContentID, 10, 64); e == nil && info.ID != ctx.ContentID {
+	if _, e := strconv.ParseUint(ctx.ContentID, 10, 64); e == nil && !strings.Contains(ctx.ContentURL,"/posts/") && !strings.Contains(ctx.ContentURL,"/post/") && info.ID != ctx.ContentID {
 		return nil, util.ErrUnavailable
 	}
 	if info.Duration > config.Env.MaxDuration.Seconds() {

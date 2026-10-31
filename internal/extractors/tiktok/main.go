@@ -77,7 +77,7 @@ var Extractor = &models.Extractor{
 }
 
 func GetMedia(ctx *models.ExtractorContext) (*models.Media, error) {
-	details, _, webErr := GetVideoWeb(ctx)
+	details, cookies, webErr := GetVideoWeb(ctx)
 	if webErr == nil {
 		webErr = ensureItemIdentity(details, ctx.ContentID)
 	}
@@ -87,6 +87,7 @@ func GetMedia(ctx *models.ExtractorContext) (*models.Media, error) {
 	if webErr != nil {
 		var embedErr error
 		details, embedErr = GetVideoEmbed(ctx)
+		cookies=nil
 		if embedErr != nil {
 			return nil, fmt.Errorf("TikTok public web/embed failed: %w; %w", webErr, embedErr)
 		}
@@ -124,6 +125,7 @@ func GetMedia(ctx *models.ExtractorContext) (*models.Media, error) {
 				DownloadSettings: &models.DownloadSettings{
 					// avoid 403 error for videos
 					Headers: publicTikTokHeaders(),
+					Cookies: publicTikTokCookies(cookies),
 				},
 			})
 			return media, nil

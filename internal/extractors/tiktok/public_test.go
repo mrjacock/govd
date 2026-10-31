@@ -2,9 +2,15 @@ package tiktok
 
 import (
 	"fmt"
+	"net/http"
 	"strings"
 	"testing"
 )
+func TestTikTokAnonymousCookieScopes(t *testing.T){
+ original:=&http.Cookie{Name:"fixture",Value:"anonymous",Secure:true}
+ result:=publicTikTokCookies([]*http.Cookie{original,{Name:"site",Value:"anonymous",Domain:".tiktok.com",Secure:true},{Name:"foreign",Domain:".evil.invalid"},nil})
+ if len(result)!=2||result[0].Domain!="www.tiktok.com"||result[1].Domain!=".tiktok.com"||original.Domain!=""{t.Fatal("anonymous cookie scope widened or source mutated")}
+}
 
 const fixtureID = "7548343642138709278"
 
@@ -29,19 +35,25 @@ func TestTikTokModernAndReflowSchemas(t *testing.T) {
 		if e != nil || item.Video == nil || item.Video.PlayURL == "" || ensureItemIdentity(item, fixtureID) != nil {
 			t.Fatal(e)
 		}
-		mixed:=[]byte(strings.Replace(string(body),`"__DEFAULT_SCOPE__":{`,`"__DEFAULT_SCOPE__":{"language":"it-IT","featureFlags":[true,false],"optional":null,`,1))
-		if item,e:=ParseUniversalData(mixed);e!=nil||item.ID!=fixtureID{t.Fatalf("mixed unrelated scope data: %v",e)}
+		mixed := []byte(strings.Replace(string(body), `"__DEFAULT_SCOPE__":{`, `"__DEFAULT_SCOPE__":{"language":"it-IT","featureFlags":[true,false],"optional":null,`, 1))
+		if item, e := ParseUniversalData(mixed); e != nil || item.ID != fixtureID {
+			t.Fatalf("mixed unrelated scope data: %v", e)
+		}
 	}
 	body := []byte(`<script id="__UNIVERSAL_DATA_FOR_REHYDRATION__">{"__DEFAULT_SCOPE__":{"recommendations":{"itemStruct":{"id":"` + fixtureID + `"}}}}</script>`)
 	if _, e := ParseUniversalData(body); e == nil {
 		t.Fatal("accepted recommendation as requested video")
 	}
 }
-func TestTikTokEmbedMixedDataAndPrivacy(t *testing.T){
- body:=embedFixture(fixtureID,"https://v45.tiktokcdn-eu.com/a.mp4",false)
- mixed:=[]byte(strings.Replace(string(body),`"data":{`,`"data":{"language":"it-IT","optional":null,`,1))
- if _,e:=parseVideoEmbed(mixed,fixtureID);e!=nil{t.Fatal(e)}
- if ensureItemIdentity(&WebItemStruct{ID:fixtureID,PrivateItem:true},fixtureID)==nil{t.Fatal("private item accepted")}
+func TestTikTokEmbedMixedDataAndPrivacy(t *testing.T) {
+	body := embedFixture(fixtureID, "https://v45.tiktokcdn-eu.com/a.mp4", false)
+	mixed := []byte(strings.Replace(string(body), `"data":{`, `"data":{"language":"it-IT","optional":null,`, 1))
+	if _, e := parseVideoEmbed(mixed, fixtureID); e != nil {
+		t.Fatal(e)
+	}
+	if ensureItemIdentity(&WebItemStruct{ID: fixtureID, PrivateItem: true}, fixtureID) == nil {
+		t.Fatal("private item accepted")
+	}
 }
 func TestTikTokURLBoundaries(t *testing.T) {
 	for _, raw := range []string{"https://tiktok.com.evil.invalid/x", "https://user@tiktok.com/x", "https://tiktok.com:8080/x", "http://v45.tiktokcdn-eu.com/x"} {

@@ -68,3 +68,9 @@ func TestPublicFacebookHelperOutputBound(t *testing.T) {
 		t.Fatal("unbounded helper output")
 	}
 }
+func TestFacebookPostMayHaveDistinctVideoID(t *testing.T){
+ old:=config.Env;defer func(){config.Env=old}();config.Env.MaxDuration=time.Minute;config.Env.MaxFileSize=1024
+ ctx:=&models.ExtractorContext{ContentID:"27748111711544437",ContentURL:"https://m.facebook.com/61561662904469/posts/27748111711544437",Extractor:Extractor}
+ info:=&publicVideo{ID:"1412825880920191",URL:"https://video.fbcdn.net/a.mp4",Duration:10,FileSize:100}
+ if _,e:=parsePublicVideo(ctx,info);e!=nil{t.Fatal("post and video IDs are separate namespaces",e)}
+}

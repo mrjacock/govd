@@ -5,6 +5,7 @@ on:
     paths:
       - 'internal/extractors/facebook/**'
       - 'internal/extractors/tiktok/**'
+      - 'internal/util/download/**'
       - '.github/workflows/platform-tests.yml'
   workflow_dispatch:
 
@@ -33,7 +34,7 @@ jobs:
       - name: Build test tools from the same source
         run: docker build --file Dockerfile.group --target builder --tag govd-platforms:builder .
       - name: Check concurrent parser and resource handling
-        run: docker run --rm --cpus=2 --memory=3g --memory-swap=3g --pids-limit=256 --entrypoint sh govd-platforms:builder -c 'go test -p 2 -race -count=1 ./internal/extractors/facebook ./internal/extractors/tiktok ./internal/core ./internal/models ./internal/networking'
+        run: docker run --rm --cpus=2 --memory=3g --memory-swap=3g --pids-limit=256 --entrypoint sh govd-platforms:builder -c 'go test -p 2 -race -count=1 ./internal/extractors/facebook ./internal/extractors/tiktok ./internal/core ./internal/models ./internal/networking ./internal/util/download/...'
       - name: Export the verified binaries and formatted source
         shell: bash
         run: |
@@ -45,6 +46,7 @@ jobs:
           container=$(docker create govd-platforms:builder)
           docker cp "$container":/app/internal/extractors/facebook dist/facebook
           docker cp "$container":/app/internal/extractors/tiktok dist/tiktok
+          docker cp "$container":/app/internal/util/download dist/download
           docker rm "$container"
           git rev-parse HEAD > dist/COMMIT
           (cd dist && sha256sum govd core.test > SHA256SUMS)

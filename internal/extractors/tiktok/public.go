@@ -48,6 +48,19 @@ func validTikTokURLs(raw []string) []string {
 func publicTikTokHeaders() map[string]string {
 	return map[string]string{"User-Agent": mobileUserAgent, "Referer": "https://www.tiktok.com/", "Accept-Language": "en-US,en;q=0.9"}
 }
+// Preserve only the anonymous site's cookie scopes; never turn a host-only
+// cookie into a cookie for unrelated video CDN domains.
+func publicTikTokCookies(cookies []*http.Cookie)[]*http.Cookie{
+ var result []*http.Cookie
+ for _,cookie:=range cookies{
+  if cookie==nil{continue};copy:=*cookie
+  if copy.Domain==""{copy.Domain="www.tiktok.com"}
+  domain:=strings.TrimPrefix(strings.ToLower(copy.Domain),".")
+  if domain!="tiktok.com"&&!strings.HasSuffix(domain,".tiktok.com"){continue}
+  result=append(result,&copy)
+ }
+ return result
+}
 
 func GetVideoEmbed(ctx *models.ExtractorContext) (*WebItemStruct, error) {
 	if !videoIDPattern.MatchString(ctx.ContentID) {
@@ -108,7 +121,9 @@ func parseVideoEmbed(body []byte, id string) (*WebItemStruct, error) {
 		raw, ok = data.Source.Data["/embed/"+id]
 	}
 	var p page
-	if !ok||json.Unmarshal(raw,&p)!=nil{return nil,util.ErrUnavailable}
+	if !ok || json.Unmarshal(raw, &p) != nil {
+		return nil, util.ErrUnavailable
+	}
 	i := p.VideoData.Item
 	if !ok || p.IsError || i.ID != id || i.Secret || i.ForFriend {
 		return nil, util.ErrUnavailable
@@ -127,7 +142,9 @@ func ensureItemIdentity(details *WebItemStruct, id string) error {
 	if details == nil || !videoIDPattern.MatchString(id) || details.ID != id {
 		return fmt.Errorf("TikTok item does not match requested video")
 	}
-	if details.PrivateItem||details.Secret||details.ForFriend{return util.ErrUnavailable}
+	if details.PrivateItem || details.Secret || details.ForFriend {
+		return util.ErrUnavailable
+	}
 	return nil
 }
 func hasDownloadableVideo(v *WebVideo) bool {
