@@ -1,0 +1,152 @@
+package core
+
+import (
+	"fmt"
+	"sync"
+	"time"
+
+	"github.com/PaulSonOfLars/gotgbot/v2"
+	"github.com/PaulSonOfLars/gotgbot/v2/ext"
+	"github.com/google/uuid"
+	"github.com/govdbot/govd/internal/localization"
+	"github.com/govdbot/govd/internal/models"
+	"github.com/govdbot/govd/internal/util"
+	"github.com/hashicorp/golang-lru/v2/expirable"
+	"github.com/nicksnyder/go-i18n/v2/i18n"
+)
+
+var tasks = expirable.NewLRU[string, *models.ExtractorContext](1024, nil, 3*time.Minute)
+var tasksMu sync.Mutex
+
+func HandleInlineTask(
+	bot *gotgbot.Bot,
+	ctx *ext.Context,
+	extractorCtx *models.ExtractorContext,
+) error {
+	taskID := uuid.NewString()
+	ok := AddTask(taskID, extractorCtx)
+	if !ok {
+		return fmt.Errorf("failed to add inline task to cache")
+	}
+
+	localizer := localization.New(extractorCtx.Chat.Language)
+
+	inlineResult := &gotgbot.InlineQueryResultArticle{
+		Id: taskID,
+		Title: localizer.T(&i18n.LocalizeConfig{
+			MessageID: localization.InlineShareMessage.ID,
+		}),
+		InputMessageContent: &gotgbot.InputTextMessageContent{
+			MessageText: localizer.T(&i18n.LocalizeConfig{
+				MessageID: localization.InlineProcessingMessage.ID,
+			}),
+			ParseMode: gotgbot.ParseModeHTML,
+			LinkPreviewOptions: &gotgbot.LinkPreviewOptions{
+				IsDisabled: true,
+			},
+		},
+		ReplyMarkup: &gotgbot.InlineKeyboardMarkup{
+			InlineKeyboard: [][]gotgbot.InlineKeyboardButton{
+				{
+					{
+						Text:         "...",
+						CallbackData: "inline:loading",
+					},
+				},
+			},
+		},
+	}
+	ok, err := ctx.InlineQuery.Answer(
+		bot, []gotgbot.InlineQueryResult{inlineResult},
+		&gotgbot.AnswerInlineQueryOpts{
+			CacheTime:  util.Ptr(int64(0)),
+			IsPersonal: true,
+		},
+	)
+	if err != nil || !ok {
+		RemoveTask(taskID)
+		return err
+	}
+
+	return nil
+}
+
+func HandleInlineResultTask(
+	bot *gotgbot.Bot,
+	ctx *ext.Context,
+	extractorCtx *models.ExtractorContext,
+) error {
+	defer extractorCtx.FilesTracker.Cleanup()
+
+	key := extractorCtx.Key()
+
+	release, err := acquireQueue(extractorCtx.Context, key)
+	if err != nil {
+		return err
+	}
+	defer release()
+
+	taskResult, err := executeDownload(extractorCtx, true)
+	if err != nil {
+		return err
+	}
+
+	caption := formatCaption(
+		taskResult.Media,
+		bot.Username,
+		extractorCtx.Chat.Captions,
+	)
+
+	err = SendInlineFormats(
+		bot, ctx, extractorCtx,
+		taskResult.Media, taskResult.Formats,
+		&models.SendFormatsOptions{
+			Caption:  caption,
+			IsStored: taskResult.IsStored,
+		},
+	)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func AddTask(taskID string, ctx *models.ExtractorContext) bool {
+	tasksMu.Lock()
+	defer tasksMu.Unlock()
+	if _, exists := tasks.Get(taskID); exists {
+		return false
+	}
+	tasks.Add(taskID, ctx)
+	return true
+}
+
+// ClaimTask validates the Telegram actor and consumes a task atomically.
+// A rejected claim must leave the owner's task available.
+func ClaimTask(taskID string, actorID int64) (*models.ExtractorContext, bool) {
+	tasksMu.Lock()
+	defer tasksMu.Unlock()
+	task, exists := tasks.Get(taskID)
+	if !exists || task == nil || task.Chat == nil || actorID <= 0 || task.Chat.ChatID != actorID {
+		return nil, false
+	}
+	if task.Context != nil && task.Context.Err() != nil {
+		tasks.Remove(taskID)
+		return nil, false
+	}
+	tasks.Remove(taskID)
+	return task, true
+}
+
+func GetTask(taskID string) (*models.ExtractorContext, bool) {
+	tasksMu.Lock()
+	defer tasksMu.Unlock()
+	return tasks.Get(taskID)
+}
+
+func RemoveTask(taskID string) bool {
+	tasksMu.Lock()
+	defer tasksMu.Unlock()
+	return tasks.Remove(taskID)
+}
