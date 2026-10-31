@@ -61,7 +61,7 @@ var Extractor = &models.Extractor{
 	ID:          "tiktok",
 	DisplayName: "TikTok",
 
-	URLPattern: regexp.MustCompile(`https?:\/\/(?:(?:www|m)\.)?(?:vx)?tiktok\.com\/(?:(?:@[\w.-]+\/)?(?:video|photo|v|p)\/|embed\/(?:v2\/)?)(?P<id>[0-9]+)`),
+	URLPattern: regexp.MustCompile(`https?:\/\/(?:(?:www|m)\.)?(?:vx)?tiktok\.com\/(?:(?:@[\w.-]*\/)?(?:video|photo|v|p)\/|embed\/(?:v2\/)?)(?P<id>[0-9]+)`),
 	Host:       []string{"tiktok", "vxtiktok"},
 
 	GetFunc: func(ctx *models.ExtractorContext) (*models.ExtractorResponse, error) {

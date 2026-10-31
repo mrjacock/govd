@@ -56,6 +56,7 @@ func TestTikTokEmbedMixedDataAndPrivacy(t *testing.T) {
 	}
 }
 func TestTikTokURLBoundaries(t *testing.T) {
+	for _,raw:=range []string{"https://www.tiktok.com/@/video/"+fixtureID,"https://www.tiktok.com/@_/video/"+fixtureID,"https://www.tiktok.com/@user/video/"+fixtureID,"https://www.tiktok.com/embed/v2/"+fixtureID,"https://www.tiktok.com/embed/"+fixtureID}{if idx:=Extractor.URLPattern.FindStringIndex(raw);idx==nil||idx[0]!=0{t.Fatal("unsupported official video URL",raw)}}
 	for _, raw := range []string{"https://tiktok.com.evil.invalid/x", "https://user@tiktok.com/x", "https://tiktok.com:8080/x", "http://v45.tiktokcdn-eu.com/x"} {
 		if publicTikTokURL(raw) {
 			t.Fatal(raw)
