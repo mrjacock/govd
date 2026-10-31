@@ -49,7 +49,7 @@ func New(
 
 	chunkSize := settings.ChunkSize
 
-	if err == nil && resp.StatusCode==http.StatusOK {
+	if err == nil && resp.StatusCode == http.StatusOK {
 		defer resp.Body.Close()
 		totalSize := resp.ContentLength
 		if util.ExceedsMaxFileSize(totalSize) {
@@ -66,7 +66,9 @@ func New(
 			}, nil
 		}
 	}
-	if err==nil && resp.StatusCode!=http.StatusOK {resp.Body.Close()}
+	if err == nil && resp.StatusCode != http.StatusOK {
+		resp.Body.Close()
+	}
 
 	headers := map[string]string{
 		"Range": "bytes=0-0",

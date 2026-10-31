@@ -76,8 +76,14 @@ func ParseUniversalData(body []byte) (*WebItemStruct, error) {
 	}
 	var itemStructBytes json.RawMessage
 	for _, key := range []string{"webapp.video-detail", "webapp.reflow.video.detail"} {
-		var page struct{ItemInfo struct{Item json.RawMessage `json:"itemStruct"`} `json:"itemInfo"`}
-		if raw:=data.Scope[key];len(raw)==0||json.Unmarshal(raw,&page)!=nil{continue}
+		var page struct {
+			ItemInfo struct {
+				Item json.RawMessage `json:"itemStruct"`
+			} `json:"itemInfo"`
+		}
+		if raw := data.Scope[key]; len(raw) == 0 || json.Unmarshal(raw, &page) != nil {
+			continue
+		}
 		if candidate := page.ItemInfo.Item; len(candidate) > 0 && string(candidate) != "null" {
 			itemStructBytes = candidate
 			break

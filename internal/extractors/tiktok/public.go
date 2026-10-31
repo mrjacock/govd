@@ -48,18 +48,26 @@ func validTikTokURLs(raw []string) []string {
 func publicTikTokHeaders() map[string]string {
 	return map[string]string{"User-Agent": mobileUserAgent, "Referer": "https://www.tiktok.com/", "Accept-Language": "en-US,en;q=0.9"}
 }
+
 // Preserve only the anonymous site's cookie scopes; never turn a host-only
 // cookie into a cookie for unrelated video CDN domains.
-func publicTikTokCookies(cookies []*http.Cookie)[]*http.Cookie{
- var result []*http.Cookie
- for _,cookie:=range cookies{
-  if cookie==nil{continue};copy:=*cookie
-  if copy.Domain==""{copy.Domain="www.tiktok.com"}
-  domain:=strings.TrimPrefix(strings.ToLower(copy.Domain),".")
-  if domain!="tiktok.com"&&!strings.HasSuffix(domain,".tiktok.com"){continue}
-  result=append(result,&copy)
- }
- return result
+func publicTikTokCookies(cookies []*http.Cookie) []*http.Cookie {
+	var result []*http.Cookie
+	for _, cookie := range cookies {
+		if cookie == nil {
+			continue
+		}
+		copy := *cookie
+		if copy.Domain == "" {
+			copy.Domain = "www.tiktok.com"
+		}
+		domain := strings.TrimPrefix(strings.ToLower(copy.Domain), ".")
+		if domain != "tiktok.com" && !strings.HasSuffix(domain, ".tiktok.com") {
+			continue
+		}
+		result = append(result, &copy)
+	}
+	return result
 }
 
 func GetVideoEmbed(ctx *models.ExtractorContext) (*WebItemStruct, error) {

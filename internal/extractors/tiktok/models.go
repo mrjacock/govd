@@ -51,13 +51,13 @@ type AwemeDetail struct {
 }
 
 type WebItemStruct struct {
-	PrivateItem bool `json:"privateItem"`
-	Secret bool `json:"secret"`
-	ForFriend bool `json:"forFriend"`
-	ID        string        `json:"id"`
-	Desc      string        `json:"desc"`
-	Video     *WebVideo     `json:"video"`
-	ImagePost *WebImagePost `json:"imagePost"`
+	PrivateItem bool          `json:"privateItem"`
+	Secret      bool          `json:"secret"`
+	ForFriend   bool          `json:"forFriend"`
+	ID          string        `json:"id"`
+	Desc        string        `json:"desc"`
+	Video       *WebVideo     `json:"video"`
+	ImagePost   *WebImagePost `json:"imagePost"`
 }
 
 type WebImagePost struct {

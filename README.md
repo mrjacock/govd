@@ -2,7 +2,7 @@
 
 Independent review snapshot based on [govdbot/govd](https://github.com/govdbot/govd), upstream commit `c49232db414f2a1132c505b0e5833813beaed3ea` (March 2026). Original MIT license and attribution are preserved. These changes have not been merged or endorsed by the upstream maintainers.
 
-This version adds an optional anonymous Instagram fallback using yt-dlp, handles photo albums and Instagram share links, enforces streamed download limits, and adds task ownership, bounded concurrency and network-request checks. It does not require a personal Instagram session for the public cases tested.
+This version adds bounded anonymous Instagram/Facebook extraction and native TikTok mobile/embed parsing, along with task ownership, scoped cookies, concurrency limits and streamed download limits. The tested public Instagram, Facebook and TikTok cases do not require a personal account. TikTok uses only the temporary anonymous cookies issued by its own public page, kept in memory with their domain scopes.
 
 ## Build the reviewed version
 
@@ -26,13 +26,18 @@ The tested helper is Linux amd64. Other architectures have not been validated. U
 
 - Full Go test suite passed using Go 1.26.10; targeted race tests passed.
 - Live Instagram matrix: four Reels, a three-photo album and a share link downloaded; one oversized video was correctly rejected. Temporary-file cleanup was checked.
-- Real Telegram delivery checked in a private test chat, including two links in one message.
+- Facebook/TikTok matrix: 13 successful download cases, covering six distinct Facebook videos, two distinct TikTok videos, an Instagram Reel and a three-photo album; one oversized file was correctly rejected. Actual app shares, mobile Reel/watch URLs, video.php, TikTok short redirects, empty handles and embed URLs were covered. Two additional Facebook links could not be retrieved anonymously and are not counted as downloads.
+- Real Telegram delivery checked in a private test chat, including a 64-second TikTok and a 27-second Facebook share sent together. Bounded sequential fallback, header consistency and temporary-file cleanup are covered by tests.
 - Updated govulncheck: no reachable vulnerable symbols or additional imported vulnerable packages; two module-only AWS S3 Crypto advisories remain in unused transitive functionality.
 
-These are bounded tests, not a guarantee for every platform, private/deleted/restricted content, or every group configuration. This snapshot has not yet passed the upstream maintainer's full contribution/lint review. Inherited publishing and notification workflows are manual-only in this repository.
+These are bounded tests, not a guarantee for every platform, private/deleted/restricted content, or every group configuration. This snapshot has not yet passed the upstream maintainer's full contribution/lint review. Inherited publishing and notification workflows are manual-only; the public-media test workflow runs for relevant pull requests and can be started manually.
 
 For upstream documentation see [README.upstream.md](README.upstream.md). Please do not post bot tokens, cookies, personal configuration or operational logs in issues. This repository currently provides source code; it does not publish a prebuilt container image.
 
 ## Optional extractor configuration
 
 The public source intentionally contains no embedded Twitter web-client bearer value or iGram signing key. Set `TWITTER_WEB_BEARER_TOKEN` only if you use the legacy Twitter extractor, and `IGRAM_HMAC_KEY` only if you use the optional iGram fallback. Obtain any required values independently and keep them in your private configuration. Without them, those legacy paths are unavailable; the tested anonymous Instagram yt-dlp fallback does not need either value. Example bot tokens and database/password defaults have also been removed; configure your own before startup.
+
+## Anonymous access limitations
+
+A video playable in a signed-in browser may still be unavailable to an anonymous downloader. Removed/restricted content and platform anti-automation responses are not treated as a guarantee of public access. No browser session is imported automatically, and no promise is made that every Facebook or TikTok link will work. See [verification provenance](VERIFICATION.md) for the tested build.

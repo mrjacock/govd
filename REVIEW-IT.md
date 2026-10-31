@@ -6,6 +6,7 @@ Questa copia non contiene token Telegram, password, ID personali, cookie o sessi
 ## Cosa cambia
 
 - Fallback Instagram anonimo opzionale con yt-dlp: Reel, post fotografici, album misti e link Condividi. Senza yt-dlp rimangono i metodi nativi. Non promette accesso a contenuti privati, cancellati o limitati da Instagram.
+- Facebook pubblico tramite il motore locale già usato per Instagram; TikTok tramite i dati mobile/embed e i cookie anonimi temporanei emessi dal sito. Non vengono importati account o sessioni personali. Le richieste del file mantengono le stesse intestazioni e il download può recuperare un rifiuto dei blocchi con un singolo trasferimento normale, sempre entro i limiti.
 - Identificatori completi dei lavori, controllo del proprietario basato sull'identità Telegram e consumo atomico; autorizzazione degli eventi inline e statistiche riservate all'amministratore.
 - Controlli degli indirizzi, dei reindirizzamenti e dei cookie; connessione agli stessi IP pubblici verificati dopo la risoluzione DNS. Il motore esterno richiede anche isolamento di rete del sistema per la medesima protezione.
 - Limiti di frequenza e concorrenza, cache e code limitate; gestione di URL in testo, didascalie e collegamenti incorporati, fino a tre link unici per messaggio.
@@ -35,3 +36,7 @@ Suite completa Go e test di concorrenza sui componenti modificati superati. Matr
 Govulncheck con toolchain aggiornata: zero vulnerabilità nei simboli raggiungibili e nei pacchetti importati; rimangono due avvisi solo a livello del modulo AWS transitivo, per funzioni S3 Crypto non usate. Non equivale a una certificazione di sicurezza completa né a una scansione esaustiva dei componenti nativi/Python. Gli estrattori di tutte le altre piattaforme non sono stati verificati con una matrice live equivalente.
 
 Prima di pubblicare, separare la proposta funzionale dalle correzioni di sicurezza e coordinare privatamente i dettagli sensibili con il manutentore. Un fork appartiene al proprio account; una pull request propone le modifiche al progetto originale e viene accettata o rifiutata dal manutentore. La patch può essere distribuita separatamente anche senza accettazione upstream.
+
+## Verifica Facebook/TikTok del 31 ottobre
+
+Suite completa e controlli di concorrenza eseguiti su GitHub; 13 casi di download reali riusciti fra Facebook, TikTok e regressioni Instagram. Sei video Facebook distinti e due TikTok distinti provati, con link da app e varianti mobile. Verificati il limite di 50 MiB, la pulizia dei file e la consegna Telegram di due link nello stesso messaggio. Due ulteriori collegamenti Facebook non sono recuperabili nella sessione anonima del bot: non sono conteggiati come video scaricati. La riproduzione da un browser con account non prova la disponibilità anonima. Dettagli in VERIFICATION.md.
