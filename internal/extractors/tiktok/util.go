@@ -1,8 +1,8 @@
 package tiktok
 
 import (
+	"encoding/json"
 	"fmt"
-"encoding/json"
 	"io"
 	"net/http"
 	"regexp"
@@ -30,7 +30,9 @@ var (
 
 func GetVideoWeb(ctx *models.ExtractorContext) (*WebItemStruct, []*http.Cookie, error) {
 	awemeID := ctx.ContentID
- if !videoIDPattern.MatchString(awemeID){return nil,nil,util.ErrUnavailable}
+	if !videoIDPattern.MatchString(awemeID) {
+		return nil, nil, util.ErrUnavailable
+	}
 
 	resp, err := ctx.Fetch(
 		http.MethodGet,
@@ -66,11 +68,24 @@ func ParseUniversalData(body []byte) (*WebItemStruct, error) {
 		return nil, fmt.Errorf("universal data not found")
 	}
 
- var data struct { Scope map[string]struct{ItemInfo struct{Item json.RawMessage `json:"itemStruct"`} `json:"itemInfo"`} `json:"__DEFAULT_SCOPE__"` }
- if err:=json.Unmarshal(matches[1],&data);err!=nil{return nil,fmt.Errorf("invalid TikTok public data: %w",err)}
- var itemStructBytes json.RawMessage
- for _,key:=range []string{"webapp.video-detail","webapp.reflow.video.detail"}{if candidate:=data.Scope[key].ItemInfo.Item;len(candidate)>0&&string(candidate)!="null"{itemStructBytes=candidate;break}}
- if len(itemStructBytes)==0{return nil,util.ErrUnavailable}
+	var data struct {
+		Scope map[string]json.RawMessage `json:"__DEFAULT_SCOPE__"`
+	}
+	if err := json.Unmarshal(matches[1], &data); err != nil {
+		return nil, fmt.Errorf("invalid TikTok public data: %w", err)
+	}
+	var itemStructBytes json.RawMessage
+	for _, key := range []string{"webapp.video-detail", "webapp.reflow.video.detail"} {
+		var page struct{ItemInfo struct{Item json.RawMessage `json:"itemStruct"`} `json:"itemInfo"`}
+		if raw:=data.Scope[key];len(raw)==0||json.Unmarshal(raw,&page)!=nil{continue}
+		if candidate := page.ItemInfo.Item; len(candidate) > 0 && string(candidate) != "null" {
+			itemStructBytes = candidate
+			break
+		}
+	}
+	if len(itemStructBytes) == 0 {
+		return nil, util.ErrUnavailable
+	}
 
 	var webItem WebItemStruct
 	err := sonic.ConfigFastest.Unmarshal(itemStructBytes, &webItem)
