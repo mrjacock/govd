@@ -63,6 +63,8 @@ type WebImagePost struct {
 }
 
 type WebVideo struct {
+	PlayURL string `json:"playAddr"`
+	DownloadURL string `json:"downloadAddr"`
 	Duration int32        `json:"duration"`
 	Height   int32        `json:"height"`
 	PlayAddr *WebPlayAddr `json:"PlayAddrStruct"`
