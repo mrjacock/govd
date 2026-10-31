@@ -42,13 +42,14 @@ func New(
 	resp, err := client.FetchWithContext(
 		ctx, http.MethodHead, url,
 		&networking.RequestParams{
+			Headers: settings.Headers,
 			Cookies: settings.Cookies,
 		},
 	)
 
 	chunkSize := settings.ChunkSize
 
-	if err == nil {
+	if err == nil && resp.StatusCode==http.StatusOK {
 		defer resp.Body.Close()
 		totalSize := resp.ContentLength
 		if util.ExceedsMaxFileSize(totalSize) {
@@ -65,6 +66,7 @@ func New(
 			}, nil
 		}
 	}
+	if err==nil && resp.StatusCode!=http.StatusOK {resp.Body.Close()}
 
 	headers := map[string]string{
 		"Range": "bytes=0-0",
