@@ -6,6 +6,8 @@ This version adds bounded anonymous Instagram/Facebook extraction and native Tik
 
 ## Build the reviewed version
 
+For an explicit Compose deployment of this fork, see [installation and migration instructions in Italian](INSTALL-IT.md) and `compose.review.yaml`. This new deployment example has not yet been tested end to end on a fresh host; it does not change an existing installation automatically.
+
 The reviewed Dockerfile is **Dockerfile.group**, target **runtime**. The original Dockerfile and Compose files are retained for reference and do not automatically deploy this reviewed image. In particular, the original Compose image still points to upstream.
 
 Place the official [yt-dlp 2026.10.26 musllinux archive](https://github.com/yt-dlp/yt-dlp/releases/download/2026.10.26/yt-dlp_musllinux.zip) in the repository root as `yt-dlp_musllinux.zip`. Verify its SHA256 before building:
