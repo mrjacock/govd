@@ -58,22 +58,22 @@ func (client *HTTPClient) FetchWithContext(
 			req.AddCookie(cookie)
 		}
 	}
-	if req.Header.Get("User-Agent") == "" {
-		req.Header.Set("User-Agent", generateChromeUA())
+	if req.Header.Get(userAgentHeader) == "" {
+		req.Header.Set(userAgentHeader, generateChromeUA())
 	}
 
 	executor := client.Client
 	if standard, ok := executor.(*http.Client); ok {
-		copy := *standard
+		cloned := *standard
 		original := req.URL
-		copy.CheckRedirect = func(next *http.Request, via []*http.Request) error {
+		cloned.CheckRedirect = func(next *http.Request, via []*http.Request) error {
 			if err := checkRedirect(next, via); err != nil {
 				return err
 			}
 			if params.StopRedirect != nil && params.StopRedirect(next) {
 				return http.ErrUseLastResponse
 			}
-			next.Header.Del("Cookie")
+			next.Header.Del(cookieHeader)
 			for _, cookie := range client.Cookies {
 				if cookieMatches(cookie, next.URL, false) {
 					next.AddCookie(cookie)
@@ -87,7 +87,7 @@ func (client *HTTPClient) FetchWithContext(
 			}
 			return nil
 		}
-		executor = &copy
+		executor = &cloned
 	}
 	resp, err := executor.Do(req)
 	if err != nil {

@@ -32,7 +32,7 @@ The tested helper is Linux amd64. Other architectures have not been validated. U
 - Real Telegram delivery checked in a private test chat, including a 64-second TikTok and a 27-second Facebook share sent together. Bounded sequential fallback, header consistency and temporary-file cleanup are covered by tests.
 - Updated govulncheck: no reachable vulnerable symbols or additional imported vulnerable packages; two module-only AWS S3 Crypto advisories remain in unused transitive functionality.
 
-These are bounded tests, not a guarantee for every platform, private/deleted/restricted content, or every group configuration. This snapshot has not yet passed the upstream maintainer's full contribution/lint review. Inherited publishing and notification workflows are manual-only; the public-media test workflow runs for relevant pull requests and can be started manually.
+These are bounded tests, not a guarantee for every platform, private/deleted/restricted content, or every group configuration. The complete contribution has passed the pinned upstream lint rules; maintainer review and acceptance remain pending in upstream PR #45. See VERIFICATION.md for the exact source and CI run. Inherited publishing and notification workflows are manual-only; the public-media test workflow runs for relevant pull requests and can be started manually.
 
 For upstream documentation see [README.upstream.md](README.upstream.md). Please do not post bot tokens, cookies, personal configuration or operational logs in issues. This repository currently provides source code; it does not publish a prebuilt container image.
 
